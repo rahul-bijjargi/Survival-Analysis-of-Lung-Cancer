@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lung Cancer Survival System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-image: url("{{ url_for('static', filename='background.webp') }}");
+            background-size: cover;
+            background-repeat: no-repeat;
+            margin: 0;
+        }
+        .container {
+            width: 400px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        .logo {
+            width: 80px;
+            margin-bottom: 10px;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button {
+            background: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        a {
+            color: #007BFF;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        ul {
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Registration Form -->
+    <div id="registration" class="container" {% if cancer_report or prediction or error %}style="display: none;"{% endif %}>
+        <img src="{{ url_for('static', filename='logo.webp') }}" alt="Logo" class="logo">
+        <h2>Register</h2>
+        <input type="text" id="reg_username" placeholder="Username">
+        <input type="email" id="reg_email" placeholder="Email">
+        <input type="password" id="reg_password" placeholder="Password">
+        <button onclick="registerUser()">Register</button>
+        <p>Already have an account? <a href="#" onclick="showLogin()">Login</a></p>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login" class="container" style="display: none;">
+        <img src="{{ url_for('static', filename='logo.webp') }}" alt="Logo" class="logo">
+        <h2>Login</h2>
+        <input type="text" id="login_username" placeholder="Username">
+        <input type="password" id="login_password" placeholder="Password">
+        <button onclick="loginUser()">Login</button>
+        <p>Don't have an account? <a href="#" onclick="showRegister()">Register</a></p>
+    </div>
+
+    <!-- Upload Section -->
+    <div id="upload" class="container" {% if not cancer_report and not prediction and not error %}style="display: none;"{% endif %}>
+        <img src="{{ url_for('static', filename='logo.webp') }}" alt="Logo" class="logo">
+        <h2>Upload Cancer Report (PDF)</h2>
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <input type="file" name="pdf_file" accept=".pdf" required>
+            <button type="submit">Upload PDF</button>
+        </form>
+
+        {% if cancer_report %}
+            <h3>Extracted Report Data:</h3>
+            <ul>
+                {% for key, value in cancer_report.items() %}
+                    <li><strong>{{ key }}:</strong> {{ value }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if prediction %}
+            <h3>Prediction:</h3>
+            <p>{{ prediction }}</p>
+        {% endif %}
+
+        {% if error %}
+            <p style="color: red;">{{ error }}</p>
+        {% endif %}
+    </div>
+
+    <script>
+        function showLogin() {
+            document.getElementById('registration').style.display = 'none';
+            document.getElementById('login').style.display = 'block';
+            document.getElementById('upload').style.display = 'none';
+        }
+
+        function showRegister() {
+            document.getElementById('login').style.display = 'none';
+            document.getElementById('registration').style.display = 'block';
+            document.getElementById('upload').style.display = 'none';
+        }
+
+        function registerUser() {
+            let username = document.getElementById('reg_username').value;
+            let email = document.getElementById('reg_email').value;
+            let password = document.getElementById('reg_password').value;
+
+            if (username === "" || email === "" || password === "") {
+                alert("Please fill in all fields!");
+                return;
+            }
+
+            if (localStorage.getItem(username)) {
+                alert("User already exists! Please login.");
+                return;
+            }
+
+            localStorage.setItem(username, JSON.stringify({ email: email, password: password }));
+            alert("Registration successful! Please log in.");
+            showLogin();
+        }
+
+        function loginUser() {
+            let username = document.getElementById('login_username').value;
+            let password = document.getElementById('login_password').value;
+
+            let storedUser = localStorage.getItem(username);
+
+            if (!storedUser) {
+                alert("Invalid login! Please register first.");
+                return;
+            }
+
+            let userData = JSON.parse(storedUser);
+
+            if (userData.password === password) {
+                alert("Login successful!");
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('upload').style.display = 'block';
+            } else {
+                alert("Incorrect password! Please try again.");
+            }
+        }
+    </script>
+</body>
+</html>
